@@ -96,7 +96,6 @@ export default function SignUpPage(){
                         >
                             Sign in
                         </Link>
-                        
                     </div>
                 </Card>
             </Container>
