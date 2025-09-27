@@ -1,7 +1,10 @@
 "use client"
-import { Container } from "@/components/ui/container";
-import { useEffect, useState } from "react"
+import { useEffect, useState,useCallback } from "react"
+import { useRouter, useSearchParams } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { Container } from "@/components/ui/container";
+import { AnxietyGames } from "@/components/games/anxiety-games";
 import {
     Card,
     CardContent,
@@ -9,7 +12,6 @@ import {
     CardTitle,
     CardDescription,
 } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import {
     Brain,
     Calendar,
@@ -28,17 +30,84 @@ import {
     X,
     Loader2,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  addDays,
+  format,
+  subDays,
+  startOfDay,
+  isWithinInterval,
+} from "date-fns";
+
 
 export default function DashboardPage() {
     const [currentTime, setCurrentTime] = useState(new Date());
-
+    const [showMoodModal, setShowMoodModal] = useState(false);
     useEffect(() => {
         const timer = setInterval(() =>
         setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, [])
+    
+    const wellnessStats = [
+        {
+        title: "Mood Score",
+        value:"no data",
+        icon: Brain,
+        color: "text-purple-500",
+        bgColor: "bg-purple-500/10",
+        description: "Today's average mood",
+        },
+        {
+        title: "Completion Rate",
+        value: "100%",
+        icon: Trophy,
+        color: "text-yellow-500",
+        bgColor: "bg-yellow-500/10",
+        description: "Perfect completion rate",
+        },
+        {
+        title: "Therapy Sessions",
+        value: "no data",
+        icon: Heart,
+        color: "text-rose-500",
+        bgColor: "bg-rose-500/10",
+        description: "Total sessions completed",
+        },
+        {
+        title: "Total Activities",
+        value: "no data",
+        icon: Activity,
+        color: "text-blue-500",
+        bgColor: "bg-blue-500/10",
+        description: "Planned for today",
+        },
+    ];
+    // const handleGamePlayed = useCallback(
+    //     async (gameName: string, description: string) => {
+    //     try {
+    //         await logActivity({
+    //         userId: "default-user",
+    //         type: "game",
+    //         name: gameName,
+    //         description: description,
+    //         duration: 0,
+    //         });
 
+    //         // Refresh activities after logging
+    //     } catch (error) {
+    //         console.error("Error logging game activity:", error);
+    //     }
+    //     },
+    // );
     return (
         <div className="min-h-screen bg-background p-8">
         <Container className="pt-20 pb-8 space-y-6">
@@ -149,9 +218,75 @@ export default function DashboardPage() {
                     </div>
                 </CardContent>
                 </Card>
+                
+                {/* overview card */}
+                <Card className="border-primary/10">
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle>Todays Overview</CardTitle>
+                        <CardDescription>
+                        Your wellness metrics for{" "}
+                        {format(new Date(), "MMMM d, yyyy")}
+                        </CardDescription>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                    >
+                        <Loader2 className={cn("h-4 w-4", "animate-spin")} />
+                    </Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-2 gap-3">
+                    {wellnessStats.map((stat) => (
+                        <div
+                        key={stat.title}
+                        className={cn(
+                            "p-4 rounded-lg transition-all duration-200 hover:scale-[1.02]",
+                            stat.bgColor
+                        )}
+                        >
+                        <div className="flex items-center gap-2">
+                            <stat.icon className={cn("w-5 h-5", stat.color)} />
+                            <p className="text-sm font-medium">{stat.title}</p>
+                        </div>
+                        <p className="text-2xl font-bold mt-2">{stat.value}</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            {stat.description}
+                        </p>
+                        </div>
+                    ))}
+                    </div>
+                    <div className="mt-4 text-xs text-muted-foreground text-right">
+                    Last updated: 
+                    </div>
+                </CardContent>
+                </Card>
+
+                {/* conent grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-3 space-y-6">
+                        <AnxietyGames/>
+                    </div>
+                </div>
             </div>
             </div>
         </Container>
+            <Dialog open={showMoodModal} onOpenChange={setShowMoodModal}>
+            <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>How are you feeling?</DialogTitle>
+                <DialogDescription>
+                Move the slider to track your current mood
+                </DialogDescription>
+            </DialogHeader>
+            </DialogContent>
+        </Dialog>
+
+
         </div>
     )
 }
